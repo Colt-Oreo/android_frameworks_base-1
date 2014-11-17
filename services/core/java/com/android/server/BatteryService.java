@@ -56,6 +56,9 @@ import android.util.EventLog;
 import android.util.Slog;
 import android.util.proto.ProtoOutputStream;
 
+import org.lineageos.internal.notification.LedValues;
+import org.lineageos.internal.notification.LineageBatteryLights;
+
 import java.io.File;
 import java.io.FileDescriptor;
 import java.io.FileOutputStream;
@@ -167,6 +170,8 @@ public final class BatteryService extends SystemService {
 
     private ActivityManagerInternal mActivityManagerInternal;
 
+    private LineageBatteryLights mLineageBatteryLights;
+
     public BatteryService(Context context) {
         super(context);
 
@@ -241,6 +246,15 @@ public final class BatteryService extends SystemService {
         } else if (phase == PHASE_BOOT_COMPLETED) {
             SettingsObserver mObserver = new SettingsObserver(new Handler());
             mObserver.observe();
+            mLineageBatteryLights = new LineageBatteryLights(mContext,
+                    new LineageBatteryLights.LedUpdater() {
+                public void update() {
+                    updateLedPulse();
+                }
+            });
+
+            // Update light state now that mLineageBatteryLights has been initialized.
+            updateLedPulse();
         }
     }
 
@@ -959,6 +973,10 @@ public final class BatteryService extends SystemService {
         proto.flush();
     }
 
+    private synchronized void updateLedPulse() {
+        mLed.updateLightsLocked();
+    }
+
     private final class Led {
         private final Light mBatteryLight;
 
@@ -986,39 +1004,25 @@ public final class BatteryService extends SystemService {
                 Slog.w(TAG, "updateLightsLocked: mBatteryProps is null; skipping");
                 return;
             }
-            final int level = mBatteryProps.batteryLevel;
-            final int status = mBatteryProps.batteryStatus;
-            if (mIsDndActive && !mAllowBatteryLightOnDnd) {
+            // mLineageBatteryLights is initialized during PHASE_BOOT_COMPLETED
+            // This means we don't have Lineage battery settings yet so skip.
+            if (mLineageBatteryLights == null) {
+                Slog.w(TAG, "updateLightsLocked: mLineageBatteryLights is not yet ready; skipping");
+                return;
+            }
+
+            LedValues ledValues = new LedValues(0 /* color */, mBatteryLedOn, mBatteryLedOff);
+            mLineageBatteryLights.calcLights(ledValues,
+                    mBatteryProps.batteryLevel, mBatteryProps.batteryStatus,
+                    mBatteryProps.batteryLevel <= mLowBatteryWarningLevel);
+
+            if (!ledValues.isEnabled()) {
                 mBatteryLight.turnOff();
-            } else if (level < mLowBatteryWarningLevel) {
-                if (status == BatteryManager.BATTERY_STATUS_CHARGING) {
-                    // Battery is charging and low
-                    mBatteryLight.setColor(mBatteryLowARGB);
-                } else if (mLowBatteryBlinking) {
-                    // Flash when battery is low and not charging
-                    mBatteryLight.setFlashing(mBatteryLowARGB, Light.LIGHT_FLASH_TIMED,
-                            mBatteryLedOn, mBatteryLedOff);
-                } else {
-                    // "Pulse low battery light" is disabled, no lights.
-                    mBatteryLight.turnOff();
-                }
-            } else if (status == BatteryManager.BATTERY_STATUS_CHARGING
-                    || status == BatteryManager.BATTERY_STATUS_FULL) {
-                if (status == BatteryManager.BATTERY_STATUS_FULL || level >= 90) {
-                    if (level == 100) {
-                        // Battery is really full
-                        mBatteryLight.setColor(mBatteryReallyFullARGB);
-                    } else {
-                        // Battery is full or charging and nearly full
-                        mBatteryLight.setColor(mBatteryFullARGB);
-                    }
-                } else {
-                    // Battery is charging and halfway full
-                    mBatteryLight.setColor(mBatteryMediumARGB);
-                }
+            } else if (ledValues.isPulsed()) {
+                mBatteryLight.setFlashing(ledValues.getColor(), Light.LIGHT_FLASH_TIMED,
+                        ledValues.getOnMs(), ledValues.getOffMs());
             } else {
-                // No lights if not charging and not low
-                mBatteryLight.turnOff();
+                mBatteryLight.setColor(ledValues.getColor());
             }
         }
     }
