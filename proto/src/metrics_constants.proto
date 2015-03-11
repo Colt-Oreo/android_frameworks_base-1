@@ -3983,6 +3983,7 @@ message MetricsEvent {
     // Omni Jaws
     OMNI_QS_WEATHER = 1501;
     OMNI_QS_WEATHER_DETAILS = 1502;
+    LOCKSCREEN_WEATHER_SETTINGS = 1503;
 
   }
 }
