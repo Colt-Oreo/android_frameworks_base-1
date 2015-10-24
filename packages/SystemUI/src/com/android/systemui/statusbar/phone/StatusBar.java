@@ -752,6 +752,8 @@ public class StatusBar extends SystemUI implements DemoMode,
     private NavigationBarFragment mNavigationBar;
     private View mNavigationBarView;
 
+    private boolean mLockscreenMediaMetadata;
+
     @Override
     public void start() {
         mNetworkController = Dependency.get(NetworkController.class);
@@ -2359,7 +2361,7 @@ public class StatusBar extends SystemUI implements DemoMode,
         }
 
         Drawable artworkDrawable = null;
-        if (mMediaMetadata != null) {
+        if (mMediaMetadata != null && mLockscreenMediaMetadata) {
             Bitmap artworkBitmap = null;
             artworkBitmap = mMediaMetadata.getBitmap(MediaMetadata.METADATA_KEY_ART);
             if (artworkBitmap == null) {
@@ -5392,7 +5394,10 @@ public class StatusBar extends SystemUI implements DemoMode,
             resolver.registerContentObserver(Settings.System.getUriFor(
                     Settings.System.DOUBLE_TAP_SLEEP_LOCKSCREEN),
                     false, this, UserHandle.USER_ALL);
-            update();
+            resolver.registerContentObserver(Settings.System.getUriFor(
+                    Settings.System.LOCKSCREEN_MEDIA_METADATA),
+                    false, this, UserHandle.USER_ALL);
+	update();
         }
 
         @Override
@@ -5402,13 +5407,17 @@ public class StatusBar extends SystemUI implements DemoMode,
                 setDoubleTapNavbar();
             } else if (uri.equals(Settings.System.getUriFor(
                     Settings.System.DOUBLE_TAP_SLEEP_LOCKSCREEN))) {
-                setLockscreenDoubleTapToSleep();
+                setStatusBarWindowViewOptions();
+            } else if (uri.equals(Settings.System.getUriFor(
+                    Settings.System.LOCKSCREEN_MEDIA_METADATA))) {
+                setLockscreenMediaMetadata();
             }
         }
 
         public void update() {
             setDoubleTapNavbar();
-            setLockscreenDoubleTapToSleep();
+            setStatusBarWindowViewOptions();
+            setLockscreenMediaMetadata();
         }
     }
 
@@ -5422,6 +5431,11 @@ public class StatusBar extends SystemUI implements DemoMode,
         if (mStatusBarWindow != null) {
             mStatusBarWindow.setLockscreenDoubleTapToSleep();
         }
+    }
+
+    private void setLockscreenMediaMetadata() {
+        mLockscreenMediaMetadata = Settings.System.getIntForUser(mContext.getContentResolver(),
+                Settings.System.LOCKSCREEN_MEDIA_METADATA, 0, UserHandle.USER_CURRENT) == 1;
     }
 
     private RemoteViews.OnClickHandler mOnClickHandler = new RemoteViews.OnClickHandler() {
