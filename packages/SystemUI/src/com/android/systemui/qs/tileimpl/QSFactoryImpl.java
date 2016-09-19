@@ -43,6 +43,7 @@ import com.android.systemui.qs.tiles.SoundTile;
 import com.android.systemui.qs.tiles.SyncTile;
 import com.android.systemui.qs.tiles.UsbTetherTile;
 import com.android.systemui.qs.tiles.UserTile;
+import com.android.systemui.qs.tiles.VolumeTile;
 import com.android.systemui.qs.tiles.WifiTile;
 import com.android.systemui.qs.tiles.WorkModeTile;
 import com.android.systemui.qs.QSTileHost;
@@ -81,6 +82,7 @@ public class QSFactoryImpl implements QSFactory {
         else if (tileSpec.equals("sound")) return new SoundTile(mHost);
         else if (tileSpec.equals("ambient_display")) return new AmbientDisplayTile(mHost);
         else if (tileSpec.equals("sync")) return new SyncTile(mHost);
+        else if (tileSpec.equals("volume")) return new VolumeTile(mHost);
         // Intent tiles.
         else if (tileSpec.startsWith(IntentTile.PREFIX)) return IntentTile.create(mHost, tileSpec);
         else if (tileSpec.startsWith(CustomTile.PREFIX)) return CustomTile.create(mHost, tileSpec);
