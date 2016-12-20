@@ -3977,6 +3977,15 @@ public abstract class Context {
     @SystemApi
     public static final String VR_SERVICE = "vrmanager";
 
+     /**
+     * {@link android.app.ThemeManager} for accessing and setting theme state.
+     *
+     * @hide
+     * @see #getSystemService
+     * @see android.app.ThemeManager
+     */
+    public static final String THEME_SERVICE = "theme";
+
     /**
      * Determine whether the given permission is allowed for a particular
      * process and user ID running in the system.

@@ -18,12 +18,16 @@ import com.android.server.LocalServices;
 import com.android.server.statusbar.StatusBarManagerInternal;
 import com.android.server.statusbar.StatusBarManagerInternal.GlobalActionsListener;
 
+import android.app.IThemeCallback;
+import android.app.ThemeManager;
 import android.content.Context;
 import android.os.Handler;
 import android.util.Slog;
+import android.provider.Settings;
+import com.android.internal.R;
 import android.view.WindowManagerPolicy.WindowManagerFuncs;
 
-class GlobalActions implements GlobalActionsListener {
+public class GlobalActions implements GlobalActionsListener {
 
     private static final String TAG = "GlobalActions";
     private static final boolean DEBUG = false;
@@ -38,6 +42,26 @@ class GlobalActions implements GlobalActionsListener {
     private boolean mStatusBarConnected;
     private boolean mShowing;
 
+    private ThemeManager mThemeManager;
+    private static int sTheme;
+
+    private final IThemeCallback mThemeCallback = new IThemeCallback.Stub() {
+
+        @Override
+        public void onThemeChanged(int themeMode, int color) {
+            onCallbackAdded(themeMode, color);
+        }
+
+        @Override
+        public void onCallbackAdded(int themeMode, int color) {
+            sTheme = color;
+        }
+    };
+
+    /**
+     * @param context everything needs a context :(
+     */
+
     public GlobalActions(Context context, WindowManagerFuncs windowManagerFuncs) {
         mContext = context;
         mHandler = new Handler();
@@ -47,6 +71,11 @@ class GlobalActions implements GlobalActionsListener {
         // Some form factors do not have a status bar.
         if (mStatusBarInternal != null) {
             mStatusBarInternal.setGlobalActionsListener(this);
+	}
+
+        mThemeManager = (ThemeManager) mContext.getSystemService(Context.THEME_SERVICE);
+        if (mThemeManager != null) {
+            mThemeManager.addCallback(mThemeCallback);
         }
     }
 
@@ -69,6 +98,21 @@ class GlobalActions implements GlobalActionsListener {
             ensureLegacyCreated();
             mLegacyGlobalActions.showDialog(mKeyguardShowing, mDeviceProvisioned);
         }
+    }
+
+    public static Context getContext(Context context) {
+        int themeMode = Settings.Secure.getInt(context.getContentResolver(),
+                Settings.Secure.THEME_PRIMARY_COLOR, 2);
+        int accentColor = Settings.Secure.getInt(context.getContentResolver(),
+                Settings.Secure.THEME_ACCENT_COLOR, 1);
+
+        if (themeMode == 0 && accentColor == 0) {
+            context.setTheme(R.style.Theme_DeviceDefault_Light_Dialog_Alert);
+        } else {
+            context.getTheme().applyStyle(sTheme, true);
+        }
+
+        return context;
     }
 
     @Override

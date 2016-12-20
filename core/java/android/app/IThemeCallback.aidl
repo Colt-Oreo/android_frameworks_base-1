@@ -1,5 +1,5 @@
-/*
- * Copyright (C) 2014 The Android Open Source Project
+/**
+ * Copyright (C) 2016-2017 The ParanoidAndroid Project
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -13,21 +13,14 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+package android.app;
 
-package com.android.systemui.volume;
+/** @hide */
+interface IThemeCallback {
 
-import android.content.res.Configuration;
+    // notify when theme changes
+    void onThemeChanged(int themeMode, int color);
 
-import com.android.systemui.DemoMode;
-import com.android.systemui.statusbar.policy.ZenModeController;
-
-import java.io.FileDescriptor;
-import java.io.PrintWriter;
-
-public interface VolumeComponent extends DemoMode {
-    void dismissNow();
-    void onConfigurationChanged(Configuration newConfig);
-    void dump(FileDescriptor fd, PrintWriter pw, String[] args);
-    void register();
-    void updateDialog();
+    // called when a callback gets added
+    void onCallbackAdded(int themeMode, int color);
 }

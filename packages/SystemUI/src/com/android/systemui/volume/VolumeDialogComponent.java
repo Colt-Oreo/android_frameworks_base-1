@@ -176,6 +176,11 @@ public class VolumeDialogComponent implements VolumeComponent, TunerService.Tuna
     public void dump(FileDescriptor fd, PrintWriter pw, String[] args) {
     }
 
+//    @Override
+    public void updateDialog() {
+//        mDialog.updateDialog();
+    }
+
     private void startSettings(Intent intent) {
         Dependency.get(ActivityStarter.class).startActivity(intent,
                 true /* onlyProvisioned */, true /* dismissShade */);
