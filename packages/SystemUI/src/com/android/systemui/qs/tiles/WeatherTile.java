@@ -76,7 +76,7 @@ public class WeatherTile extends QSTileImpl<BooleanState> implements OmniJawsCli
         mDetailAdapter = (WeatherDetailAdapter) createDetailAdapter();
     }
 
-    @Override
+    //@Override
     public boolean isDualTarget() {
         return true;
     }
