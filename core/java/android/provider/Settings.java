@@ -3997,6 +3997,18 @@ public final class Settings {
        public static final String QS_FOOTER_WARNINGS = "qs_footer_warnings";
 
         /**
+         * Custom brightness value for Ambient Display
+         * @hide
+         */
+        public static final String AMBIENT_DOZE_CUSTOM_BRIGHTNESS = "ambient_doze_custom_brightness";
+
+        /**
+         * Use latest screen-on brightness value for Ambient Display
+         * @hide
+         */
+        public static final String AMBIENT_DOZE_AUTO_BRIGHTNESS = "ambient_doze_auto_brightness";
+
+        /**
          * Whether to launch default music player when headset plugged in
          * 0 = don't do anything (default)
          * 1 = launch only on wired connection
@@ -4184,6 +4196,8 @@ public final class Settings {
             PRIVATE_SETTINGS.add(STATUS_BAR_QUICK_QS_PULLDOWN);
             PRIVATE_SETTINGS.add(LOCKSCREEN_MEDIA_METADATA);
             PRIVATE_SETTINGS.add(TOAST_ICON);
+            PRIVATE_SETTINGS.add(AMBIENT_DOZE_CUSTOM_BRIGHTNESS);
+            PRIVATE_SETTINGS.add(AMBIENT_DOZE_AUTO_BRIGHTNESS);
         }
 
         /**
