@@ -96,4 +96,6 @@
         <item>space</item>
     </string-array>
 
+    <string name="statusbar_items_title">Statusbar icon</string>
+
 </resources>
