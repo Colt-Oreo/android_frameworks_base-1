@@ -104,4 +104,7 @@
     <!-- Screenshot Delete Toast -->
     <string name="delete_screenshot_toast">Screenshot Deleted</string>
 
+    <!-- PiP Tile -->
+    <string name="quick_settings_pip_label">PiP</string>
+
 </resources>
