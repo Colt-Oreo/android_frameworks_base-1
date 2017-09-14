@@ -7411,6 +7411,12 @@ public final class Settings {
         public static final String STATUS_BAR_BATTERY_SAVER_COLOR = "status_bar_battery_saver_color";
 
         /**
+          * Whether to allow killing of the foreground app by long-pressing the Back button
+          * @hide
+          */
+         public static final String KILL_APP_LONGPRESS_BACK = "kill_app_longpress_back";
+
+        /**
          * Whether to set a lower brightness level when enabling night mode
          * 0: Disabled
          * 1: Set the brightness to a very low value
