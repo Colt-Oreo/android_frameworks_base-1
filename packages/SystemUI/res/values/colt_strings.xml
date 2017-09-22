@@ -107,4 +107,7 @@
     <!-- PiP Tile -->
     <string name="quick_settings_pip_label">PiP</string>
 
+    <string name="lockscreen_default">Default</string>
+    <string name="lockscreen_hidden">None</string>
+
 </resources>
