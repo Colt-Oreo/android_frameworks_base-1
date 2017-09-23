@@ -38,4 +38,7 @@
   <java-symbol type="anim" name="last_app_in" />
   <java-symbol type="anim" name="last_app_out" />
 
+  <java-symbol type="integer" name="config_longPressOnMenuBehavior" />
+
+
 </resources>
