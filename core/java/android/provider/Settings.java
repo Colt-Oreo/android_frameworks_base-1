@@ -3922,6 +3922,12 @@ public final class Settings {
         public static final String MUSIC_TILE_TITLE = "music_tile_title";
 
         /**
+         * Whether to show Brightness Icon On Brightness Slider
+         * @hide
+         */
+        public static final String BRIGHTNESS_ICON = "brightness_icon";
+
+        /**
          * Settings to backup. This is here so that it's in the same place as the settings
          * keys and easy to update.
          *
