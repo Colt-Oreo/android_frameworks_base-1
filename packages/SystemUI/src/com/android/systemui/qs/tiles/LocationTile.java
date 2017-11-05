@@ -89,6 +89,7 @@ public class LocationTile extends QSTileImpl<BooleanState> {
             return;
         }
         switchMode();
+	refreshState();
     }
 
     private void switchMode() {
