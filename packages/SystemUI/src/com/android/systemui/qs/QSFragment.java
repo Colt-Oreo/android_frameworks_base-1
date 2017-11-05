@@ -23,6 +23,8 @@ import android.graphics.Rect;
 import android.os.Bundle;
 import android.support.annotation.VisibleForTesting;
 import android.util.Log;
+import android.os.UserHandle;
+import android.provider.Settings;
 import android.view.ContextThemeWrapper;
 import android.view.LayoutInflater;
 import android.view.View;
