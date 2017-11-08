@@ -77,13 +77,13 @@ public class WeatherTile extends QSTileImpl<BooleanState> implements OmniJawsCli
     }
 
     @Override
-    public boolean isDualTarget() {
-        return true;
-    }
-
-    @Override
     public int getMetricsCategory() {
         return MetricsEvent.OMNI_QS_WEATHER;
+    }
+
+//    @Override
+    public boolean isDualTarget() {
+        return true;
     }
 
     @Override
