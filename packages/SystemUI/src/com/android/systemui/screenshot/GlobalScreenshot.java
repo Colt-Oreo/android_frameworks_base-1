@@ -444,6 +444,7 @@ class GlobalScreenshot {
     private AsyncTask<Void, Void, Void> mSaveInBgTask;
 
     private Ringtone  mScreenshotSound;
+    private MediaActionSound mCameraSound;
 
     private final int mSfHwRotation;
 
