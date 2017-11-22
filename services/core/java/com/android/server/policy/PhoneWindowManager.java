@@ -137,7 +137,6 @@ import android.content.IntentFilter;
 import android.content.ServiceConnection;
 import android.content.pm.ActivityInfo;
 import android.content.pm.ApplicationInfo;
-import com.android.internal.util.omni.TaskUtils;
 import android.content.pm.PackageManager;
 import android.content.pm.ResolveInfo;
 import android.content.res.CompatibilityInfo;
@@ -813,25 +812,6 @@ public class PhoneWindowManager implements WindowManagerPolicy {
     private GlobalKeyManager mGlobalKeyManager;
 
     private boolean mGlobalActionsOnLockDisable;
-    private int mLongPressOnAppSwitchBehavior;
-    private boolean mAppSwitchConsumed;
-    private boolean mVolumeWakeSupport;
-    private int mLongPressOnMenuBehavior;
-
-    // constants for rotation bits
-    private static final int ROTATION_0_MODE = 1;
-    private static final int ROTATION_90_MODE = 2;
-    private static final int ROTATION_180_MODE = 4;
-    private static final int ROTATION_270_MODE = 8;
-
-    private static final int KEY_ACTION_NOTHING = 0;
-    private static final int KEY_ACTION_ALL_APPS = 1;
-    private static final int KEY_ACTION_BACK = 2;
-    private static final int KEY_ACTION_MENU = 3;
-    private static final int KEY_ACTION_SPLIT = 4;
-    private static final int KEY_ACTION_LAST_APP = 5;
-    private static final int KEY_ACTION_SLEEP = 6;
-    private static final int KEY_ACTION_APP_SWITCH = 7;
 
     // Fallback actions by key code.
     private final SparseArray<KeyCharacterMap.FallbackAction> mFallbackActions =
@@ -2226,13 +2206,6 @@ public class PhoneWindowManager implements WindowManagerPolicy {
 
         mNavBarOpacityMode = res.getInteger(
                 com.android.internal.R.integer.config_navBarOpacityMode);
-
-        mLongPressOnMenuBehavior = mContext.getResources().getInteger(
-                com.android.internal.R.integer.config_longPressOnMenuBehavior);
-        if (mLongPressOnMenuBehavior < LONG_PRESS_HOME_NOTHING ||
-                mLongPressOnMenuBehavior > LONG_PRESS_HOME_ASSIST) {
-            mLongPressOnMenuBehavior = LONG_PRESS_HOME_NOTHING;
-        }
     }
 
     @Override
@@ -3396,12 +3369,11 @@ public class PhoneWindowManager implements WindowManagerPolicy {
         final int flags = event.getFlags();
         final boolean down = event.getAction() == KeyEvent.ACTION_DOWN;
         final boolean canceled = event.isCanceled();
-	final boolean virtualKey = event.getDeviceId() == KeyCharacterMap.VIRTUAL_KEYBOARD;
 
         if (DEBUG_INPUT) {
             Log.d(TAG, "interceptKeyTi keyCode=" + keyCode + " down=" + down + " repeatCount="
                     + repeatCount + " keyguardOn=" + keyguardOn + " mHomePressed=" + mHomePressed
-                    + " canceled=" + canceled + " virtualKey=" + virtualKey);
+                    + " canceled=" + canceled);
         }
 
         // If we think we might have a volume down & power key chord on the way
@@ -3545,20 +3517,16 @@ public class PhoneWindowManager implements WindowManagerPolicy {
             }
             return -1;
         } else if (keyCode == KeyEvent.KEYCODE_MENU) {
-            if (!virtualKey) {
-                if (down) {
-                    if (repeatCount == 0) {
-                        mAppSwitchConsumed = false;
-                        preloadRecentApps();
-                    } else if ((event.getFlags() & KeyEvent.FLAG_LONG_PRESS) != 0) {
-                        handleLongPressOnMenu();
-                    }
-                } else {
-                    if (!mAppSwitchConsumed) {
-                        performKeyAction(KEY_ACTION_MENU);
-                    }
+            // Hijack modified menu keys for debugging features
+            final int chordBug = KeyEvent.META_SHIFT_ON;
+
+            if (down && repeatCount == 0) {
+                if (mEnableShiftMenuBugReports && (metaState & chordBug) == chordBug) {
+                    Intent intent = new Intent(Intent.ACTION_BUG_REPORT);
+                    mContext.sendOrderedBroadcastAsUser(intent, UserHandle.CURRENT,
+                            null, null, null, 0, null, null);
+                    return -1;
                 }
-                return -1;
             }
         } else if (keyCode == KeyEvent.KEYCODE_SEARCH) {
             if (down) {
@@ -8551,87 +8519,6 @@ public class PhoneWindowManager implements WindowManagerPolicy {
         }
         if (mKeyguardDelegate != null) {
             mKeyguardDelegate.dump(prefix, pw);
-        }
-    }
-
-    // omni additions start
-    private void triggerVirtualKeypress(final int keyCode) {
-        InputManager im = InputManager.getInstance();
-        long now = SystemClock.uptimeMillis();
-
-        final KeyEvent downEvent = new KeyEvent(now, now, KeyEvent.ACTION_DOWN,
-                keyCode, 0, 0, KeyCharacterMap.VIRTUAL_KEYBOARD, 0,
-                KeyEvent.FLAG_FROM_SYSTEM, InputDevice.SOURCE_KEYBOARD);
-        final KeyEvent upEvent = KeyEvent.changeAction(downEvent, KeyEvent.ACTION_UP);
-
-        im.injectInputEvent(downEvent, InputManager.INJECT_INPUT_EVENT_MODE_ASYNC);
-        im.injectInputEvent(upEvent, InputManager.INJECT_INPUT_EVENT_MODE_ASYNC);
-    }
-
-    private void performKeyAction(int behavior) {
-        if (DEBUG_INPUT){
-            Slog.d(TAG, "performKeyAction " + behavior);
-        }
-        switch (behavior) {
-            case KEY_ACTION_BACK:
-                triggerVirtualKeypress(KeyEvent.KEYCODE_BACK);
-                break;
-            case KEY_ACTION_APP_SWITCH:
-                toggleRecentApps();
-                break;
-            case KEY_ACTION_MENU:
-                triggerVirtualKeypress(KeyEvent.KEYCODE_MENU);
-                break;
-            case KEY_ACTION_SPLIT:
-                boolean dockStatus = TaskUtils.isTaskDocked(mContext);
-                if (dockStatus) {
-                    TaskUtils.undockTask(mContext);
-                } else {
-                    TaskUtils.dockTopTask(mContext);
-                }
-                break;
-            case KEY_ACTION_LAST_APP:
-                TaskUtils.toggleLastApp(mContext, mCurrentUserId);
-                break;
-            case KEY_ACTION_SLEEP:
-                mPowerManager.goToSleep(SystemClock.uptimeMillis(), PowerManager.GO_TO_SLEEP_REASON_POWER_BUTTON, 0);
-                // in the goto sleep case we wont get a up event that will reset this to the correct state
-                if (mHomePressed) {
-                    mHomeConsumed = false;
-                    mHomePressed = false;
-                }
-                break;
-            case KEY_ACTION_ALL_APPS:
-                launchAllAppsAction();
-                break;
-            default:
-                break;
-        }
-    }
-
-    private void appSwitchLongPress() {
-        mAppSwitchConsumed = true;
-        cancelPreloadRecentApps();
-        performHapticFeedbackLw(null, HapticFeedbackConstants.LONG_PRESS, false);
-        performKeyAction(mLongPressOnAppSwitchBehavior);
-    }
-
-    private boolean isCustomWakeKey(int keyCode) {
-        switch (keyCode) {
-            case KeyEvent.KEYCODE_VOLUME_UP:
-            case KeyEvent.KEYCODE_VOLUME_DOWN:
-                if (DEBUG_WAKEUP) Log.i(TAG, "isOffscreenWakeKey: mVolumeWakeSupport " + mVolumeWakeSupport);
-                return mVolumeWakeSupport;
-        }
-        return false;
-    }
-
-    private void handleLongPressOnMenu() {
-        if (mLongPressOnMenuBehavior == 1) {
-            mAppSwitchConsumed = true;
-            cancelPreloadRecentApps();
-            performHapticFeedbackLw(null, HapticFeedbackConstants.LONG_PRESS, false);
-            toggleRecentApps();
         }
     }
 }
