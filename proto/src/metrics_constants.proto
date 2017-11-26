@@ -3985,5 +3985,8 @@ message MetricsEvent {
     OMNI_QS_WEATHER_DETAILS = 1502;
     LOCKSCREEN_WEATHER_SETTINGS = 1503;
 
+    // Colt on Dance...
+    COLTO = 5000;
+
   }
 }
